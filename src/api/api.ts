@@ -23,13 +23,17 @@ export const getChatCompletion = async (
       'gpt-3.5-turbo-16k': 'gpt-35-turbo-16k',
       'gpt-3.5-turbo-1106': 'gpt-35-turbo-1106',
       'gpt-3.5-turbo-0125': 'gpt-35-turbo-0125',
+      'gpt-5-2025-09-11': 'gpt-5-2025-09-11',
+      'gpt-5-2025-05-07': 'gpt-5-2025-05-07'
     };
 
     const model = modelmapping[config.model] || config.model;
 
-    // set api version to 2023-07-01-preview for gpt-4 and gpt-4-32k, otherwise use 2023-03-15-preview
+    // API version mapping
     const apiVersion =
-      model === 'gpt-4' || model === 'gpt-4-32k'
+      model.startsWith('gpt-5')
+        ? '2025-01-01-preview' // placeholder, update once Azure publishes
+        : model === 'gpt-4' || model === 'gpt-4-32k'
         ? '2023-07-01-preview'
         : '2023-03-15-preview';
 
@@ -49,7 +53,7 @@ export const getChatCompletion = async (
     body: JSON.stringify({
       messages,
       ...config,
-      max_tokens: undefined,
+      max_tokens: undefined, // let OpenAI API handle token limits
     }),
   });
   if (!response.ok) throw new Error(await response.text());
@@ -77,15 +81,21 @@ export const getChatCompletionStream = async (
     const modelmapping: Partial<Record<ModelOptions, string>> = {
       'gpt-3.5-turbo': 'gpt-35-turbo',
       'gpt-3.5-turbo-16k': 'gpt-35-turbo-16k',
+      'gpt-5-2025-09-11': 'gpt-5-2025-09-11',
+      'gpt-5-2025-05-07': 'gpt-5-2025-05-07',
     };
 
     const model = modelmapping[config.model] || config.model;
 
-    // set api version to 2023-07-01-preview for gpt-4 and gpt-4-32k, otherwise use 2023-03-15-preview
     const apiVersion =
-      model === 'gpt-4' || model === 'gpt-4-32k'
+      model.startsWith('gpt-5')
+        ? '2025-05-01-preview'
+        : model.startsWith('gpt-4.1')
+        ? '2024-05-01-preview'
+        : model === 'gpt-4' || model === 'gpt-4-32k'
         ? '2023-07-01-preview'
         : '2023-03-15-preview';
+
     const path = `openai/deployments/${model}/chat/completions?api-version=${apiVersion}`;
 
     if (!endpoint.endsWith(path)) {
@@ -106,17 +116,18 @@ export const getChatCompletionStream = async (
       stream: true,
     }),
   });
+
   if (response.status === 404 || response.status === 405) {
     const text = await response.text();
 
     if (text.includes('model_not_found')) {
       throw new Error(
         text +
-          '\nMessage from Better ChatGPT:\nPlease ensure that you have access to the GPT-4 API!'
+          '\nMessage from Better ChatGPT:\nPlease ensure that you have access to the GPT-5 or GPT-4 API!'
       );
     } else {
       throw new Error(
-        'Message from Better ChatGPT:\nInvalid API endpoint! We recommend you to check your free API endpoint.'
+        'Message from Better ChatGPT:\nInvalid API endpoint! We recommend you to check your API endpoint.'
       );
     }
   }
@@ -151,3 +162,4 @@ export const submitShareGPT = async (body: ShareGPTSubmitBodyInterface) => {
   const url = `https://shareg.pt/${id}`;
   window.open(url, '_blank');
 };
+
