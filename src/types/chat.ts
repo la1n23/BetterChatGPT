@@ -49,7 +49,12 @@ export interface Folder {
   color?: string;
 }
 
+/**
+ * Supported model options including GPT-5
+ */
 export type ModelOptions =
+  | 'gpt-5'
+  | 'gpt-5-2025-09-01' // hypothetical dated release, adjust as OpenAI publishes
   | 'gpt-4o'
   | 'gpt-4o-2024-05-13'
   | 'gpt-4'
@@ -72,6 +77,7 @@ export type TotalTokenUsed = {
     completionTokens: number;
   };
 };
+
 export interface LocalStorageInterfaceV0ToV1 {
   chats: ChatInterface[];
   currentChatIndex: number;
@@ -101,6 +107,7 @@ export interface LocalStorageInterfaceV2ToV3 {
   theme: Theme;
   autoTitle: boolean;
 }
+
 export interface LocalStorageInterfaceV3ToV4 {
   chats: ChatInterface[];
   currentChatIndex: number;
